@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from openai import OpenAI
 import torch
 from django import forms
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest, JsonResponse
@@ -53,6 +54,8 @@ def feedback_view(request):
 
 
 def get_feedback_from_pieces(piece_1: Piece, piece_2: Piece) -> Feedback:
+    openai_client = OpenAI()
+
     print(f"Piece 1: {piece_1.name} ({piece_1.file.size / 1000}kb)")
     print(f"Piece 2: {piece_2.name} ({piece_2.file.size / 1000}kb)")
 
@@ -63,4 +66,9 @@ def get_feedback_from_pieces(piece_1: Piece, piece_2: Piece) -> Feedback:
     model = combined_model.combined_model(dim, drop, in_channels_class, spec_size)
     model.load_state_dict(torch.load("./feedback/audio_model/checkpoints/model_epoch_13.pt"))
 
-    return Feedback(50, "No feedback")
+    response = openai_client.responses.create(
+        model="gpt-5-nano",
+        input=piece_1.name
+    )
+
+    return Feedback(50, response.output_text)
