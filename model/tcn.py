@@ -12,11 +12,11 @@ class conv_frontend(nn.Module):
         #Out_channels: Number of output channels
         super().__init__()
         #Define the convolutional layers
-        self.conv1 = nn.conv2d(input_dim = in_channels, output_dim = 32, kernel_size = (3, 7), stride = (1,1), padding = (1, 3), groups = 1,dropout=0.1)
+        self.conv1 = nn.Conv2d(in_channels, 32, kernel_size = (3, 7), stride = (1,1), padding = (1, 3), groups = 1)
         self.maxpool1 = nn.MaxPool2d(kernel_size = (3, 1))
-        self.conv2 = nn.conv2d(input_dim = 32, output_dim = 64, kernel_size = (12, 1), stride = (2,1), padding = (0, 0), groups = 1, dropout=0.1)
+        self.conv2 = nn.Conv2d(32, 64, kernel_size = (12, 1), stride = (2,1), padding = (0, 0), groups = 1)
         self.maxpool2 = nn.MaxPool2d(kernel_size = (3, 1))
-        self.conv3 = nn.conv2d(input_dim = 64, output_dim = out_channels, kernel_size = (3, 5), stride = (1,1), padding = (1, 2), groups = 1, dropout=0.1)
+        self.conv3 = nn.Conv2d(64, out_channels, kernel_size = (3, 5), stride = (1,1), padding = (1, 2), groups = 1)
         self.maxpool3 = nn.MaxPool2d(kernel_size = (3, 1))
         self.norm = nn.LayerNorm(out_channels)
         self.act = nn.GELU()
@@ -49,19 +49,18 @@ class class_model(nn.Module):
     def __init__(self, dim, drop, in_channels):
         super().__init__()
 
-        self.frequency_dim = 128
 
-        self.tcn_block_0 = nn.Conv1d(input_dim = in_channels, output_dim = dim, kernel_size = 5, stride = 1, padding = 2,dilation = 1,dropout=0.2)
-        self.tcn_block_1 = nn.Conv1d(input_dim = dim, output_dim = dim, kernel_size = 5, stride = 1, padding = 4,dilation = 2,dropout=0.2)
-        self.tcn_block_2 = nn.Conv1d(input_dim = dim, output_dim = dim, kernel_size = 5, stride = 1, padding = 8,dilation = 4, dropout=0.2)
-        self.tcn_block_3 = nn.Conv1d(input_dim = dim, output_dim = dim, kernel_size = 5, stride = 1, padding = 16,dilation = 8, dropout=0.2)
-        self.tcn_block_4 = nn.Conv1d(input_dim = dim, output_dim = dim, kernel_size = 5, stride = 1, padding = 32,dilation = 16, dropout=0.2)
-        self.tcn_block_5 = nn.Conv1d(input_dim = dim, output_dim = dim, kernel_size = 5, stride = 1, padding = 64,dilation = 32, dropout=0.2)
-        self.tcn_block_6 = nn.Conv1d(input_dim = dim, output_dim = dim, kernel_size = 5, stride = 1, padding = 128,dilation = 64, dropout=0.2)
-        self.tcn_block_7 = nn.Conv1d(input_dim = dim, output_dim = dim, kernel_size = 5, stride = 1, padding = 256,dilation = 128, dropout=0.2)
-        self.tcn_block_8 = nn.Conv1d(input_dim = dim, output_dim = dim, kernel_size = 5, stride = 1, padding = 512,dilation = 256, dropout=0.2)
-        self.tcn_block_9 = nn.Conv1d(input_dim = dim, output_dim = dim, kernel_size = 5, stride = 1, padding = 1024,dilation = 512, dropout=0.2)
-        self.tcn_block_10 = nn.Conv1d(input_dim = dim, output_dim = dim, kernel_size = 5, stride = 1, padding = 2048,dilation = 1024, dropout=0.2)
+        self.tcn_block_0 = nn.Conv1d(dim, dim, kernel_size = 5, stride = 1, padding = 2,dilation = 1)
+        self.tcn_block_1 = nn.Conv1d(dim, dim, kernel_size = 5, stride = 1, padding = 4,dilation = 2)
+        self.tcn_block_2 = nn.Conv1d(dim, dim, kernel_size = 5, stride = 1, padding = 8,dilation = 4)
+        self.tcn_block_3 = nn.Conv1d(dim, dim, kernel_size = 5, stride = 1, padding = 16,dilation = 8)
+        self.tcn_block_4 = nn.Conv1d(dim, dim, kernel_size = 5, stride = 1, padding = 32,dilation = 16)
+        self.tcn_block_5 = nn.Conv1d(dim, dim, kernel_size = 5, stride = 1, padding = 64,dilation = 32)
+        self.tcn_block_6 = nn.Conv1d(dim, dim, kernel_size = 5, stride = 1, padding = 128,dilation = 64)
+        self.tcn_block_7 = nn.Conv1d(dim, dim, kernel_size = 5, stride = 1, padding = 256,dilation = 128)
+        self.tcn_block_8 = nn.Conv1d(dim, dim, kernel_size = 5, stride = 1, padding = 512,dilation = 256)
+        self.tcn_block_9 = nn.Conv1d(dim, dim, kernel_size = 5, stride = 1, padding = 1024,dilation = 512)
+        self.tcn_block_10 = nn.Conv1d(dim,dim, kernel_size = 5, stride = 1, padding = 2048,dilation = 1024)
 
         self.conv0 = nn.Conv1d(dim, dim, kernel_size=1, stride=1, padding=0)
         self.conv1 = nn.Conv1d(dim, dim, kernel_size=1, stride=1, padding=0)
@@ -76,7 +75,7 @@ class class_model(nn.Module):
         self.conv10 = nn.Conv1d(dim, dim, kernel_size=1, stride=1, padding=0)
 
         #Spectrogram Definitions
-        self.conv_frontend = conv_frontend(1, dim//2, 0.1)
+        self.conv_frontend = conv_frontend(1, dim, 0.1)
 
         self.sigmoid = nn.Sigmoid()
         self.ReLU = nn.ReLU()
@@ -86,7 +85,8 @@ class class_model(nn.Module):
     def forward(self, x):
     
         x = self.conv_frontend(x)
-
+        x = x.transpose(1, 2)
+        
         # ...existing code for TCN blocks...
         x0 = self.tcn_block_0(x)
         x0 = self.sigmoid(x0) * self.tanh(x0)
