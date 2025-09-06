@@ -94,7 +94,6 @@ def get_feedback_from_file():
             next(reader, None)
         ]
 
-
         # for row in reader:
         #     feedback = row[8]
         #     all_feedback += feedback
@@ -103,18 +102,37 @@ def get_feedback_from_file():
 def train_view(request):
     openai_client = OpenAI()
 
+    done = 0
+    already_done = set()
+
+    with open("./feedback/audio_model/chatgpt_abrsm_lmth25.csv") as chatgpt_file:
+        reader = csv.reader(chatgpt_file, delimiter=",")
+
+        for row in reader:
+            performance_id = row[0]
+            already_done.add(performance_id)
+
+    total = 0
     with open("./feedback/audio_model/abrsm_lmth25.csv") as csv_file:
-        with open("./feedback/audio_model/chatgpt_abrsm_lmth25.csv", "w") as chatgpt_file:
+        reader = csv.reader(csv_file, delimiter=",")
+        for row in reader:
+            total += 1
+
+    with open("./feedback/audio_model/abrsm_lmth25.csv") as csv_file:
+        with open("./feedback/audio_model/chatgpt_abrsm_lmth25.csv", "a") as chatgpt_file:
             reader = csv.reader(csv_file, delimiter=",")
             next(reader, None)
 
             writer = csv.writer(chatgpt_file, delimiter=",")
-            writer.writerow(["performance_id", "piece_1_feedback", "piece_2_feedback"])
+            # writer.writerow(["performance_id", "piece_1_feedback", "piece_2_feedback"])
 
-            for row in reader:
             # row = next(reader, None)
+            for row in reader:
                 performance_id = row[0]
                 feedback = row[8]
+
+                if performance_id in already_done:
+                    continue
 
                 response = openai_client.responses.create(
                     model="gpt-5-nano",
@@ -128,6 +146,9 @@ def train_view(request):
                 piece_2_feedback = response_text[1].split(" ")
 
                 writer.writerow([performance_id, piece_1_feedback, piece_2_feedback])
+                chatgpt_file.flush()
+                print(f"{[performance_id, piece_1_feedback, piece_2_feedback]} ({done}/{total - len(already_done)})")
+                done += 1
 
     return HttpResponse("Done!")
     
