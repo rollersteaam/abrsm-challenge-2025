@@ -3,7 +3,7 @@ import torch
 import torch.nn.functional as F 
 from torch import nn
 from torch.nn.modules.normalization import LayerNorm
-from tcn import class_model as tcn
+from .tcn import class_model as tcn
 
 class combined_model(nn.Module):
     #Full Model
