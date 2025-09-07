@@ -66,7 +66,11 @@ def get_feedback_from_pieces(piece_1: Piece, piece_2: Piece) -> Feedback:
     drop = 0.3
     in_channels_class = 128
     model = combined_model.combined_model(dim, drop, in_channels_class, spec_size)
-    model.load_state_dict(torch.load("./feedback/audio_model/checkpoints/model_epoch_13.pt"))
+    model.load_state_dict(torch.load("./feedback/audio_model/checkpoints/best_model.pt"))
+
+    # torch array of len 40, scores 60 - 100 (0 - 1)
+    # 5 word embeddings (5,768) - use cosoine similarity
+    # 0/1 (negative/positive) vector (5,)
 
     test_feedback = get_feedback_from_file()
 
@@ -165,7 +169,7 @@ def clean_feedback(feedback: str) -> List[str]:
             "\"", ""
         ).replace(
             " ", ""
-        )
+        ).lower()
 
     return list(map(strip_func, feedback.split(",")))
 
