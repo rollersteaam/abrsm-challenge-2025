@@ -54,7 +54,7 @@ const call = async (e: SubmitEvent) => {
   state.value = State.Uploading
   const formData = new FormData(e.target as HTMLFormElement)
   try {
-    const response = await fetch('/feedback/', {
+    const response = await fetch('http://127.0.0.1:8000/feedback/', {
       method: 'POST',
       body: formData,
     })
@@ -94,7 +94,7 @@ const call = async (e: SubmitEvent) => {
         rounded
         aria-label="Cancel"
       />
-      <h2>Mark: {{ data.mark }}/100</h2>
+      <h2>Mark: {{ data.score }}/100</h2>
       <p>{{ data.feedback }}</p>
     </Panel>
   </main>
