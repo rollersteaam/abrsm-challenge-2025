@@ -1,0 +1,14 @@
+Without Grade:
+Final Accuracy within 0: 24/69 = 0.34782608695652173
+Final Accuracy within 1: 30/69 = 0.43478260869565216
+Final Accuracy within 2: 34/69 = 0.4927536231884058
+Final Accuracy within 3: 40/69 = 0.5797101449275363
+Final Accuracy within 4: 45/69 = 0.6521739130434783
+Final Accuracy within 5: 49/69 = 0.7101449275362319
+
+Final Accuracy within 0: 28/69 = 0.4057971014492754
+Final Accuracy within 1: 33/69 = 0.4782608695652174
+Final Accuracy within 2: 36/69 = 0.5217391304347826
+Final Accuracy within 3: 40/69 = 0.5797101449275363
+Final Accuracy within 4: 43/69 = 0.6231884057971014
+Final Accuracy within 5: 48/69 = 0.6956521739130435
