@@ -65,7 +65,6 @@ KJwZOJjZ|['bright/positive', 'articulated/positive', 'blemishes/negative', 'inco
 KMElDLNL|['bold/positive', 'coordinated/positive', 'balanced/positive', 'accurate/positive', 'limited/negative']|['mysterious/positive', 'controlled/positive', 'underdeveloped/negative', 'vivid/positive', 'persuasive/positive']
 KRBZbvBZ|['vibrancy/positive', 'articulation/positive', 'dexterity/positive', 'sparkle/positive', 'rushing/negative']|['impetus/positive', 'evenness/positive', 'dynamics/positive', 'slip/negative', 'character/positive']
 KWwokJNK|['bright/positive', 'rhythmic/positive', 'articulation/positive', 'uneven/negative', 'coordination/negative']|['sincerity/positive', 'expressive/positive', 'warmth/positive', 'unevenness/negative', 'clarity/negative']
-KZOdLGna|['flowing/positive', 'warm/positive', 'balanced/positive', 'expressive/positive', 'accurate/positive']|['pulse/positive', 'control/posiKZVbEEnb', 'reflective/positive']
 KaAbrRzE|['warmth/positive', 'balanced/positive', 'understated/negative', 'secure/positive', 'controlled/positive']|['crisp/positive', 'balanced/positive', 'vivid/positive', 'swing/positive', 'engaging/positive']
 KrLQegkq|['articulate/positive', 'lively/positive', 'uneven/negative', 'nuanced/positive', 'colourful/positive']|['expressive/positive', 'sentimental/positive', 'excessive/negative', 'warmth/positive', 'flow/positive']
 KxbqDZWq|['colourful/positive', 'elegant/positive', 'clear/positive', 'balanced/positive', 'imprecise/negative']|['warmth/positive', 'legato/positive', 'control/positive', 'unclear/negative', 'inconsistent/negative']
@@ -347,3 +346,4 @@ zaaNvybl|['lively/positive', 'bright/positive', 'dynamic/positive', 'imprecise/n
 NwkXAqXr|['energised/positive', 'consistent/positive', 'delays/negative', 'underdeveloped/negative', 'paced/positive']|['resolve/positive', 'relaxed/positive', 'disjointed/negative', 'undefined/negative', 'stylish/positive']
 qJavRvBb|['confident/positive', 'lively/positive', 'accented/positive', 'colourful/positive', 'slowed/negative']|['crisp/positive', 'flowing/positive', 'uneven/negative', 'pedal-warmed/positive', 'expressive/positive']
 bVoWyqPg|['confident/positive', 'brisk/positive', 'well-defined/positive', 'convincing/positive', 'untidy/negative']|['calm/positive', 'soft/positive', 'well-judged/positive', 'lilt/positive', 'understated/negative']
+KZOdLGna|['flow/positive', 'romantic/positive', 'warmth/positive', 'balanced/positive', 'control/positive']|['pulse/positive', 'control/positive', 'grit/positive', 'unevenness/negative', 'engagement/positive']
