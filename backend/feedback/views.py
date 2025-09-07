@@ -191,17 +191,8 @@ def clean_view(request):
                 already_done.add(performance_id)
 
                 # Remove extra characters from chatgpts response
-                # print(row[1])
-                # print(row[2])
-                # print(row[1:6])
-                # print()
-                # print(row[6:11])
                 piece_1_feedback = clean_feedback(row[1])
                 piece_2_feedback = clean_feedback(row[2])
-
-                print("Feedback:")
-                print(piece_1_feedback)
-                print(piece_2_feedback)
 
                 writer.writerow([performance_id, piece_1_feedback, piece_2_feedback])
     
