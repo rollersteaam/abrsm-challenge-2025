@@ -65,21 +65,28 @@ def get_feedback_from_pieces(piece_1: Piece, piece_2: Piece) -> Feedback:
 
     # spec_size = 1500
     # dim = 64
-    # drop = 0.3
+    drop = 0.3
     # in_channels_class = 128
-    # model = combined_model.combined_model(dim, drop, in_channels_class, spec_size)
-    # model.load_state_dict(torch.load("./feedback/audio_model/checkpoints/best_model.pt"))
+    model = combined_model.combined_model(drop)
+    model.load_state_dict(torch.load("./feedback/audio_model/checkpoints/best_model.pt"))
+
+    embed_dict = np.load("./feedback/audio_model/emb_dict.npz")
+    song_embedding = torch.tensor(embed_dict[piece_1.file.name.split(".mp3")[0]]).unsqueeze(0)
+    
+    pred_mask, pred_word = model(song_embedding)
 
     # mark_prediction.squeeze().numpy()
 
-    mark_prediction = np.random.rand(40)
+    # mark_prediction = np.random.rand(40)
+    mark_prediction = pred_mask.squeeze().numpy()
 
     score = np.argmax(mark_prediction) + 60
 
     word2vec_data = np.load("./feedback/audio_model/w2v_dict.npz")
     word2vec = { key: word2vec_data[key] for key in word2vec_data.files }
 
-    word_prediction = np.random.rand(5, 768)
+    # word_prediction = np.random.rand(5, 768)
+    word_prediction = pred_word.squeeze().numpy()
 
     best_score = np.array([500., 500., 500., 500., 500.])
     best_word = ["test_word", "test_word", "test_word", "test_word", "test_word"]
