@@ -9,7 +9,7 @@ enum State {
   Error,
 }
 
-const data = ref({ mark: 0, feedback: '' })
+const data = ref({ score: 0, feedback: 'error' })
 
 const state = ref(State.Idle)
 
@@ -62,6 +62,10 @@ const call = async (e: SubmitEvent) => {
     state.value = State.Success
   } catch (err) {
     console.error('Upload failed:', err)
+    data.value = {
+      score: 0,
+      feedback: 'There was an error processing your request. Please try again.',
+    }
     state.value = State.Error
   }
 }
@@ -69,7 +73,7 @@ const call = async (e: SubmitEvent) => {
 
 <template>
   <main>
-    <form v-if="state === State.Idle" @submit="call" enctype="multipart/form-data">
+    <form @submit="call" enctype="multipart/form-data">
       <p>
         <label for="piece_1_name">Piece 1: </label>
         <!-- <input type="text" id="piece_1_name" name="piece_1_name" /> -->
@@ -85,7 +89,7 @@ const call = async (e: SubmitEvent) => {
       <input type="submit" value="Submit" />
     </form>
     <ProgressSpinner v-if="state === State.Uploading"></ProgressSpinner>
-    <Panel v-if="state === State.Success">
+    <Panel v-if="state === State.Success || state === State.Error">
       <Button
         style="position: absolute; top: 2rem; right: 2rem"
         @click="state = State.Idle"
@@ -94,8 +98,66 @@ const call = async (e: SubmitEvent) => {
         rounded
         aria-label="Cancel"
       />
-      <h2>Mark: {{ data.score }}/100</h2>
+      <h2>Score: {{ data.score }}/100</h2>
       <p>{{ data.feedback }}</p>
     </Panel>
   </main>
 </template>
+
+<style scoped>
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 1.5rem;
+  background: inherit;
+  color: black;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+form p {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+label {
+  font-weight: 600;
+  color: white;
+  margin-bottom: 0.25rem;
+}
+
+input[type='file'] {
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid #ddd;
+  background: #fff;
+}
+
+input[type='submit'] {
+  padding: 0.75rem 2rem;
+  background: #34d399;
+  color: black;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+input[type='submit']:hover {
+  background: #6dc7a6;
+}
+
+.p-panel {
+  margin-top: 2rem;
+  position: relative;
+}
+
+.p-progress-spinner {
+  display: block;
+  margin: 2rem auto;
+}
+</style>
