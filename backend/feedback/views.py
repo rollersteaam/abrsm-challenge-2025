@@ -2,6 +2,7 @@ import csv
 from dataclasses import dataclass
 from typing import List
 
+import numpy as np
 from openai import OpenAI
 import torch
 from django import forms
@@ -9,6 +10,7 @@ from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadReque
 from django.urls import path
 from django.core.files import File
 from django.views.decorators.csrf import csrf_exempt
+from sklearn.metrics.pairwise import cosine_similarity
 
 from .audio_model import combined_model
 
@@ -61,33 +63,75 @@ def get_feedback_from_pieces(piece_1: Piece, piece_2: Piece) -> Feedback:
     print(f"Piece 1 ({piece_1.file.size / 1000}kb)")
     print(f"Piece 2 ({piece_2.file.size / 1000}kb)")
 
-    spec_size = 1500
-    dim = 64
-    drop = 0.3
-    in_channels_class = 128
-    model = combined_model.combined_model(dim, drop, in_channels_class, spec_size)
-    model.load_state_dict(torch.load("./feedback/audio_model/checkpoints/best_model.pt"))
+    # spec_size = 1500
+    # dim = 64
+    # drop = 0.3
+    # in_channels_class = 128
+    # model = combined_model.combined_model(dim, drop, in_channels_class, spec_size)
+    # model.load_state_dict(torch.load("./feedback/audio_model/checkpoints/best_model.pt"))
 
-    # torch array of len 40, scores 60 - 100 (0 - 1)
-    # 5 word embeddings (5,768) - use cosoine similarity
+    # mark_prediction.squeeze().numpy()
+
+    mark_prediction = np.random.rand(40)
+
+    score = np.argmax(mark_prediction) + 60
+
+    word2vec_data = np.load("./feedback/audio_model/w2v_dict.npz")
+    word2vec = { key: word2vec_data[key] for key in word2vec_data.files }
+
+    word_prediction = np.random.rand(5, 768)
+
+    best_score = np.array([500., 500., 500., 500., 500.])
+    best_word = ["test_word", "test_word", "test_word", "test_word", "test_word"]
+
+    for word, embedding in word2vec.items():
+        embedding = embedding.reshape(1, -1)
+        sims = (1 - cosine_similarity(word_prediction, embedding).squeeze()) / 2
+        
+        comparison = sims < best_score
+
+        best_score[comparison] = sims[comparison]
+
+        print(best_score)
+
+        for i in range(len(comparison)):
+            if comparison[i]:
+                best_word[i] = word
+        # best_word[comparison] = word
+
+        print(best_word)
+    
+    print("Piece 1 descriptions")
+    
+    piece_1_descriptions = " ".join(best_word)
+    print(piece_1_descriptions)
+
+    # for word_prediction
+
+    # Iterate through all words in our cleaned file to check
+        # Use word2vec dictionary to change word into embedding
+        # Use cosine similarity in each of the 5 embedding "places" (5, 768) to figure out similarity to target embedding
+    
+    # For each 5 embedding "places" choose the most similar word, return those and feed into chatgpt
+
     # 0/1 (negative/positive) vector (5,)
 
-    test_feedback = get_feedback_from_file()
+    # test_feedback = get_feedback_from_file()
 
-    print("Finished loading test feedback")
+    # print("Finished loading test feedback")
     
-    print(test_feedback[0])
-    print(test_feedback[1])
+    # print(test_feedback[0])
+    # print(test_feedback[1])
 
     response = openai_client.responses.create(
         model="gpt-5-nano",
-        instructions="I want you to read feedback given to you for two pieces of music and provide 5 different words for each song that give a sense of the feedback. Don't just copy single words from the text unless they are musically relevant. I also want whether the feedback about the word was positive or negative. For example you may use the word expressive and positive. For each feedback given be consistent with your words you use to an extent but do not repeat all the words that you use. Give it to me in the form of: Word_positive/negative Word_positive/negative",
-        input=f"Piece 1: ${test_feedback[0][8]}\n\nPiece 2: ${test_feedback[1][8]}"
+        instructions="Given a set of 5 words which summarise feedback given on a performance of a piece of music and whether the words correspond to positive or negative feedback. Write feedback in the style of these given examples: Burgm√ºller's Ballade was firmly grounded from the outset, and details of accents and articulation vividly brought out the character of the opening passages. There were moments of slight unevenness of tone and rhythm along the way, and there was scope for more nuanced balance at times, but this was largely an assertive account. Your playing of Fountain in the Rain evoked the musical style effectively, delicately defining the figures, all warmly supported by effective use of the sustaining pedal. The more florid cadenza-like passages in the middle were particularly compelling, though subsequently there needed more rhythmical regularity to be upheld. Otherwise this was stylish playing. You brought flair and poise to the presentation, and a real feeling of performance awareness was communicated. While rhythmical consistency wasn't fully assured, other elements of the technical delivery showed greater security and confidence, and there was expressive input achieved, especially in the rippling character of the second work. Congratulations on bringing such strong intensity and involvement to your playing! A lively tempo suited the style of the Neilsen and the tone was bright to open, with musical details observed, although more clarity in projection would have further animated the narratve. Coordination of the hands often needed to be tighter but a good sense of momentum was maintained. The Chopin Valse was mostly steady in pulse if initially on the reserved side tempo wise, needing further rhythmic lilt. Dynamic contrast and inparticular more shaping of phrases would have supported the elegance of the style further, but the notes were largely secure. Reliability of notes and flow were present in this performance with contrast between the styles apparent although needing further vibrancy in detail and more tonal shaping. A good sense of focus was present in your playing.",
+        input=f"Piece 1: ${piece_1_descriptions}"
     )
 
-    print(response.output_text)
+    # print(response.output_text)
 
-    return Feedback(50, response.output_text)
+    return Feedback(int(score), response.output_text)
 
 def get_feedback_from_file():
     with open("./feedback/audio_model/abrsm_lmth25.csv") as csv_file:
