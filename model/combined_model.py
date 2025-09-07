@@ -3,7 +3,6 @@ import torch
 import torch.nn.functional as F 
 from torch import nn
 from torch.nn.modules.normalization import LayerNorm
-from tcn import class_model as tcn
 
 class combined_model(nn.Module):
     #Full Model
@@ -16,6 +15,7 @@ class combined_model(nn.Module):
         self.mark_linear2 = nn.Linear(512, 256)
         self.mark_linear3 = nn.Linear(256, 40)
         self.dropout = nn.Dropout(drop)
+        
     def forward(self, y):
 
         #X Shape = (B,C,H,W)

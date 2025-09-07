@@ -5,6 +5,7 @@ import numpy as np
 import re
 import nltk
 from nltk.corpus import stopwords
+import csv 
 
 nltk.download('stopwords')
 stop_words = set(stopwords.words('english'))
@@ -27,8 +28,14 @@ def clean_text(text):
 p_n_dict = {}
 word_embedding_dict = {}
 w2v_dict = {}
-file_name = '/Users/acw707/Documents/abrsm_lmth25/abrsm_lmth25.csv'
+file_name = '/Users/acw707/Documents/abrsm_lmth25/chatgpt_abrsm_lmth25_cleaned.csv'
+
+with open(file_name, newline='') as csvfile:
+    reader = csv.reader(csvfile)
+    for row in reader:
+        print(row)
 df = pd.read_csv(file_name)
+print(df.head())
 # Extract only the 'performance_id' and 'mark' columns
 selected = df[['performance_id', 'feedback', 'title_piece_2']]
 
