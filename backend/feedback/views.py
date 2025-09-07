@@ -69,66 +69,75 @@ def get_feedback_from_pieces(piece_1: Piece, piece_2: Piece) -> Feedback:
     # in_channels_class = 128
     model = combined_model.combined_model(drop)
     model.load_state_dict(torch.load("./feedback/audio_model/checkpoints/best_model.pt"))
+    model.eval()
 
     embed_dict = np.load("./feedback/audio_model/emb_dict.npz")
-    song_embedding = torch.tensor(embed_dict[piece_1.file.name.split(".mp3")[0]]).unsqueeze(0)
-    
-    pred_mask, pred_word = model(song_embedding)
-
-    # mark_prediction.squeeze().numpy()
-
-    # mark_prediction = np.random.rand(40)
-    mark_prediction = pred_mask.squeeze().numpy()
-
-    score = np.argmax(mark_prediction) + 60
+    grade_dict = np.load("./feedback/audio_model/grade_dict.npz")
 
     word2vec_data = np.load("./feedback/audio_model/w2v_dict.npz")
     word2vec = { key: word2vec_data[key] for key in word2vec_data.files }
 
-    # word_prediction = np.random.rand(5, 768)
-    word_prediction = pred_word.squeeze().numpy()
+    def eval_piece(piece: Piece) -> Feedback:
+        file_name = piece.file.name.split(".mp3")[0]
 
-    best_score = np.array([500., 500., 500., 500., 500.])
-    best_word = ["test_word", "test_word", "test_word", "test_word", "test_word"]
-
-    for word, embedding in word2vec.items():
-        embedding = embedding.reshape(1, -1)
-        sims = (1 - cosine_similarity(word_prediction, embedding).squeeze()) / 2
+        grade_embedding = torch.tensor(grade_dict[file_name]).unsqueeze(0)
+        song_embedding = torch.tensor(embed_dict[file_name]).mean(axis=0).unsqueeze(0)
+        final_embedding = torch.cat((song_embedding, grade_embedding), dim=1).float()
+        print(final_embedding.shape)
         
-        comparison = sims < best_score
+        pred_mask, pred_word = model(final_embedding)
 
-        best_score[comparison] = sims[comparison]
+        # mark_prediction.squeeze().numpy()
 
-        print(best_score)
+        # mark_prediction = np.random.rand(40)
+        mark_prediction = pred_mask.detach().squeeze().numpy()
 
-        for i in range(len(comparison)):
-            if comparison[i]:
-                best_word[i] = word
-        # best_word[comparison] = word
+        score = np.argmax(mark_prediction) + 60
 
-        print(best_word)
-    
-    print("Piece 1 descriptions")
-    
-    piece_1_descriptions = " ".join(best_word)
-    print(piece_1_descriptions)
+        # word_prediction = np.random.rand(5, 768)
+        word_prediction = pred_word.detach().squeeze().numpy()
 
-    # for word_prediction
+        best_score = np.array([500., 500., 500., 500., 500.])
+        best_word = ["test_word", "test_word", "test_word", "test_word", "test_word"]
 
-    # Iterate through all words in our cleaned file to check
-        # Use word2vec dictionary to change word into embedding
-        # Use cosine similarity in each of the 5 embedding "places" (5, 768) to figure out similarity to target embedding
-    
-    # For each 5 embedding "places" choose the most similar word, return those and feed into chatgpt
+        for word, embedding in word2vec.items():
+            embedding = embedding.reshape(1, -1)
+            sims = (1 - cosine_similarity(word_prediction, embedding).squeeze()) / 2
+            
+            comparison = sims < best_score
 
-    # 0/1 (negative/positive) vector (5,)
+            best_score[comparison] = sims[comparison]
 
-    # test_feedback = get_feedback_from_file()
+            print(best_score)
 
-    # print("Finished loading test feedback")
-    
-    # print(test_feedback[0])
-    # print(test_feedback[1])
+            for i in range(len(comparison)):
+                if comparison[i]:
+                    best_word[i] = word
+            # best_word[comparison] = word
+
+            print(best_word)
+        
+        print("Piece 1 descriptions")
+        
+        piece_descriptions = " ".join(best_word)
+        print(piece_descriptions)
+
+        # for word_prediction
+
+        # Iterate through all words in our cleaned file to check
+            # Use word2vec dictionary to change word into embedding
+            # Use cosine similarity in each of the 5 embedding "places" (5, 768) to figure out similarity to target embedding
+        
+        # For each 5 embedding "places" choose the most similar word, return those and feed into chatgpt
+
+        # 0/1 (negative/positive) vector (5,)
+
+        # test_feedback = get_feedback_from_file()
+
+        # print("Finished loading test feedback")
+        
+        # print(test_feedback[0])
+        # print(test_feedback[1])
 
     response = openai_client.responses.create(
         model="gpt-5-nano",
