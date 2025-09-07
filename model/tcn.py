@@ -21,22 +21,28 @@ class conv_frontend(nn.Module):
         self.norm = nn.LayerNorm(out_channels)
         self.act = nn.GELU()
         self.dropout = nn.Dropout(dropout)
+        self.batchnorm1 = nn.BatchNorm2d(32)
+        self.batchnorm2 = nn.BatchNorm2d(64)
+        self.batchnorm3 = nn.BatchNorm2d(out_channels)
     def forward(self, x):
 
         x = self.conv1(x)
         x = self.maxpool1(x)
         x = self.act(x)
         x = self.dropout(x)
+        x = self.batchnorm1(x)
 
         x = self.conv2(x)
         x = self.maxpool2(x)
         x = self.act(x)
         x = self.dropout(x)
+        x = self.batchnorm2(x)
 
         x = self.conv3(x)
         x = self.maxpool3(x)
         x = self.act(x)
         x = self.dropout(x)
+        x = self.batchnorm3(x)
 
         x = x.squeeze(2)
         x = x.transpose(2, 1)
@@ -86,7 +92,7 @@ class class_model(nn.Module):
     
         x = self.conv_frontend(x)
         x = x.transpose(1, 2)
-        
+
         # ...existing code for TCN blocks...
         x0 = self.tcn_block_0(x)
         x0 = self.sigmoid(x0) * self.tanh(x0)
@@ -103,46 +109,45 @@ class class_model(nn.Module):
         x2 = self.conv2(x2)
         x = x2 + x
 
-        x3 = self.tcn_block_3(x)
-        x3 = self.sigmoid(x3) * self.tanh(x3)
-        x3 = self.conv3(x3)
-        x = x3 + x
+        # x3 = self.tcn_block_3(x)
+        # x3 = self.sigmoid(x3) * self.tanh(x3)
+        # x3 = self.conv3(x3)
+        # x = x3 + x
 
-        x4 = self.tcn_block_4(x)
-        x4 = self.sigmoid(x4) * self.tanh(x4)
-        x4 = self.conv4(x4)
-        x = x4 + x
+        # x4 = self.tcn_block_4(x)
+        # x4 = self.sigmoid(x4) * self.tanh(x4)
+        # x4 = self.conv4(x4)
+        # x = x4 + x
         
-        x5 = self.tcn_block_5(x)
-        x5 = self.sigmoid(x5) * self.tanh(x5)
-        x5 = self.conv5(x5)
-        x = x5 + x
+        # x5 = self.tcn_block_5(x)
+        # x5 = self.sigmoid(x5) * self.tanh(x5)
+        # x5 = self.conv5(x5)
+        # x = x5 + x
 
-        x6 = self.tcn_block_6(x)
-        x6 = self.sigmoid(x6) * self.tanh(x6)
-        x6 = self.conv6(x6)
-        x = x6 + x
+        # x6 = self.tcn_block_6(x)
+        # x6 = self.sigmoid(x6) * self.tanh(x6)
+        # x6 = self.conv6(x6)
+        # x = x6 + x
         
-        x7 = self.tcn_block_7(x)
-        x7 = self.sigmoid(x7) * self.tanh(x7)
-        x7 = self.conv7(x7)
-        x = x7 + x
+        # x7 = self.tcn_block_7(x)
+        # x7 = self.sigmoid(x7) * self.tanh(x7)
+        # x7 = self.conv7(x7)
+        # x = x7 + x
 
-        x8 = self.tcn_block_8(x)
-        x8 = self.sigmoid(x8) * self.tanh(x8)
-        x8 = self.conv8(x8)
-        x = x8 + x
+        # x8 = self.tcn_block_8(x)
+        # x8 = self.sigmoid(x8) * self.tanh(x8)
+        # x8 = self.conv8(x8)
+        # x = x8 + x
         
-        x9 = self.tcn_block_9(x)
-        x9 = self.sigmoid(x9) * self.tanh(x9)
-        x9 = self.conv9(x9)
-        x = x9 + x
+        # x9 = self.tcn_block_9(x)
+        # x9 = self.sigmoid(x9) * self.tanh(x9)
+        # x9 = self.conv9(x9)
+        # x = x9 + x
         
-        x10 = self.tcn_block_10(x)
-        x10 = self.sigmoid(x10) * self.tanh(x10)
-        x10 = self.conv10(x10)
-        x = x10 + x
-        
+        # x10 = self.tcn_block_10(x)
+        # x10 = self.sigmoid(x10) * self.tanh(x10)
+        # x10 = self.conv10(x10)
+        # x = x10 + x
         x = x.transpose(1, 2)
 
         return x

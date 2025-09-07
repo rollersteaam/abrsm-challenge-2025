@@ -1,6 +1,9 @@
 import torchaudio
 import os 
 import numpy as np
+import openl3
+import torchaudio
+import soundfile as sf
 
 def create_melspec(waveform, sr=22050):
     """
@@ -23,8 +26,16 @@ def create_melspec(waveform, sr=22050):
         normalized='frame_length', 
         power=1
     )
-    melspect = melspect_transform(waveform).log1p()
+    melspect = melspect_transform(waveform).mul(1000).log1p()  # Add small value to avoid log(0)
+    
     return melspect
+
+def create_song_embedding(file_path):
+    audio, sr = sf.read(file_path)  # waveform and sampling rate
+    # Get embedding
+    emb, ts = openl3.get_audio_embedding(audio, sr, hop_size=1.0)
+    print(emb.shape)
+    return emb
 
 def process_audio_file(file_path):
     waveform, sr = torchaudio.load(file_path)
@@ -43,8 +54,9 @@ for song in songs:
     print(f"Song: {song}")
     song_name  = song[:-4]
     file_path = os.path.join('/Users/acw707/Documents/abrsm_lmth25/audio/', song)
-    melspec = process_audio_file(file_path)
-    spec_dict[song_name] = melspec.numpy()
+    #melspec = process_audio_file(file_path)
+    melspec = create_song_embedding(file_path)
+    spec_dict[song_name] = melspec
     idx += 1
-    
-np.savez('/Users/acw707/Documents/abrsm_lmth25/specs/spec_dict.npz', **spec_dict)
+
+np.savez('/Users/acw707/Documents/abrsm_lmth25/data/emb_dict.npz', **spec_dict)
