@@ -66,7 +66,6 @@ def train(model, train_loader, optimizer, device):
     skip_count = 0
     for idx, (sample_all, label_all, word_embedding, track_id) in tqdm(enumerate(train_loader), total=num_batch):
         #Set data to device
-        print(word_embedding.shape)
         track_id = track_id[0]
 
         if sample_all.max() == 0:
@@ -75,16 +74,20 @@ def train(model, train_loader, optimizer, device):
  
         sample_all = sample_all.to(device).float()
         label_all = label_all.to(device).float()
-        
+        word_embedding = word_embedding.to(device).float()
         label_all_indices = label_all.argmax(dim=1)
 
-        pred_mark = model(sample_all)
+        pred_mark, pred_word = model(sample_all)
         # print(sample_all.shape)
         # print(label_all.shape)
         #print(label_all_indices[0])
         #print(pred_mark[0].argmax())
         # print(pred_mark[0])
         loss = lossfn(pred_mark, label_all_indices)
+
+        cos_sim = F.cosine_similarity(pred_word, word_embedding, dim=-1)  # [10, 5]
+        loss_cos = 1 - cos_sim.mean()
+        loss += loss_cos
         #Backward Pass
         optimizer.zero_grad()
         loss.backward()
@@ -107,7 +110,6 @@ def validate(beat_model, val_loader, device):
     with torch.no_grad():
       for idx, (sample_all, label_all, word_embedding, track_id) in tqdm(enumerate(val_loader), total=num_batch):
         #Set data to device
-       #print(sample_all.shape)
         track_id = track_id[0]
 
         if sample_all.max() == 0:
@@ -116,16 +118,20 @@ def validate(beat_model, val_loader, device):
  
         sample_all = sample_all.to(device).float()
         label_all = label_all.to(device).float()
-        
+        word_embedding = word_embedding.to(device).float()
         label_all_indices = label_all.argmax(dim=1)
 
-        pred_mark = model(sample_all)
+        pred_mark, pred_word = model(sample_all)
         # print(sample_all.shape)
         # print(label_all.shape)
         #print(label_all_indices[0])
         #print(pred_mark[0].argmax())
         # print(pred_mark[0])
         loss = lossfn(pred_mark, label_all_indices)
+
+        cos_sim = F.cosine_similarity(pred_word, word_embedding, dim=-1)  # [10, 5]
+        loss_cos = 1 - cos_sim.mean()
+        loss += loss_cos
 
         running_loss += loss.item()
         pred_indices_list.append(pred_mark.argmax(dim=1).cpu().numpy())
@@ -149,11 +155,10 @@ for epoch in range(EPOCHS):
     if acc > best_acc:
         best_acc = acc
         saved_epoch = epoch+1
-        #torch.save(model.state_dict(), f'/Users/acw707/Documents/abrsm-challenge-2025/model/checkpoints/best_model.pt')
+        torch.save(model.state_dict(), f'/Users/acw707/Documents/abrsm-challenge-2025/model/checkpoints/best_model.pt')
         print(f'Saved Best Model at Epoch {saved_epoch} with Val Loss: {val_loss} and Acc: {best_acc}')
         val_set_track_ids = val_data.track_ids
         #np.save('/Users/acw707/Documents/abrsm-challenge-2025/model/checkpoints/val_set_track_ids.npy', np.array(val_set_track_ids))
 print(f'Best Model at Epoch {saved_epoch} with Acc: {best_acc}')
 
-
-    #torch.save(model.state_dict(), f'/Users/acw707/Documents/abrsm-challenge-2025/model/checkpoints/model_epoch_{epoch+1}.pt')
+#torch.save(model.state_dict(), f'/Users/acw707/Documents/abrsm-challenge-2025/model/checkpoints/model_epoch_{epoch+1}.pt')
