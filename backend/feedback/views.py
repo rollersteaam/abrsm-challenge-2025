@@ -77,8 +77,9 @@ def get_feedback_from_pieces(piece_1: Piece, piece_2: Piece) -> Feedback:
     word2vec_data = np.load("./feedback/audio_model/w2v_dict.npz")
     word2vec = { key: word2vec_data[key] for key in word2vec_data.files }
 
-    def eval_piece(piece: Piece) -> Feedback:
+    def eval_piece(piece: Piece):
         file_name = piece.file.name.split(".mp3")[0]
+        print(f"Evaluating piece ${file_name}")
 
         grade_embedding = torch.tensor(grade_dict[file_name]).unsqueeze(0)
         song_embedding = torch.tensor(embed_dict[file_name]).mean(axis=0).unsqueeze(0)
@@ -96,6 +97,7 @@ def get_feedback_from_pieces(piece_1: Piece, piece_2: Piece) -> Feedback:
 
         # word_prediction = np.random.rand(5, 768)
         word_prediction = pred_word.detach().squeeze().numpy()
+        word_prediction = word_prediction + np.random.uniform(-5, 5, size=word_prediction.shape)
 
         best_score = np.array([500., 500., 500., 500., 500.])
         best_word = ["test_word", "test_word", "test_word", "test_word", "test_word"]
@@ -108,46 +110,34 @@ def get_feedback_from_pieces(piece_1: Piece, piece_2: Piece) -> Feedback:
 
             best_score[comparison] = sims[comparison]
 
-            print(best_score)
-
             for i in range(len(comparison)):
                 if comparison[i]:
                     best_word[i] = word
-            # best_word[comparison] = word
 
-            print(best_word)
+            if comparison.any():
+                print("New best")
+                print(best_word)
+                print(best_score)
         
-        print("Piece 1 descriptions")
+        print("Piece descriptions")
         
         piece_descriptions = " ".join(best_word)
         print(piece_descriptions)
 
-        # for word_prediction
+        return score, piece_descriptions
 
-        # Iterate through all words in our cleaned file to check
-            # Use word2vec dictionary to change word into embedding
-            # Use cosine similarity in each of the 5 embedding "places" (5, 768) to figure out similarity to target embedding
-        
-        # For each 5 embedding "places" choose the most similar word, return those and feed into chatgpt
-
-        # 0/1 (negative/positive) vector (5,)
-
-        # test_feedback = get_feedback_from_file()
-
-        # print("Finished loading test feedback")
-        
-        # print(test_feedback[0])
-        # print(test_feedback[1])
+    eval_piece_1 = eval_piece(piece_1)
+    eval_piece_2 = eval_piece(piece_2)
 
     response = openai_client.responses.create(
         model="gpt-5-nano",
         instructions="Given a set of 5 words which summarise feedback given on a performance of a piece of music and whether the words correspond to positive or negative feedback. Write feedback in the style of these given examples: Burgm√ºller's Ballade was firmly grounded from the outset, and details of accents and articulation vividly brought out the character of the opening passages. There were moments of slight unevenness of tone and rhythm along the way, and there was scope for more nuanced balance at times, but this was largely an assertive account. Your playing of Fountain in the Rain evoked the musical style effectively, delicately defining the figures, all warmly supported by effective use of the sustaining pedal. The more florid cadenza-like passages in the middle were particularly compelling, though subsequently there needed more rhythmical regularity to be upheld. Otherwise this was stylish playing. You brought flair and poise to the presentation, and a real feeling of performance awareness was communicated. While rhythmical consistency wasn't fully assured, other elements of the technical delivery showed greater security and confidence, and there was expressive input achieved, especially in the rippling character of the second work. Congratulations on bringing such strong intensity and involvement to your playing! A lively tempo suited the style of the Neilsen and the tone was bright to open, with musical details observed, although more clarity in projection would have further animated the narratve. Coordination of the hands often needed to be tighter but a good sense of momentum was maintained. The Chopin Valse was mostly steady in pulse if initially on the reserved side tempo wise, needing further rhythmic lilt. Dynamic contrast and inparticular more shaping of phrases would have supported the elegance of the style further, but the notes were largely secure. Reliability of notes and flow were present in this performance with contrast between the styles apparent although needing further vibrancy in detail and more tonal shaping. A good sense of focus was present in your playing.",
-        input=f"Piece 1: ${piece_1_descriptions}"
+        input=f"Piece 1: ${eval_piece_1[1]} Piece 2: ${eval_piece_2[1]}"
     )
 
     # print(response.output_text)
 
-    return Feedback(int(score), response.output_text)
+    return Feedback((int(eval_piece_1[0]) + int(eval_piece_2[0])) / 2, response.output_text)
 
 def get_feedback_from_file():
     with open("./feedback/audio_model/abrsm_lmth25.csv") as csv_file:
