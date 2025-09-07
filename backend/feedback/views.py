@@ -65,8 +65,8 @@ def get_feedback_from_pieces(piece_1: Piece, piece_2: Piece) -> Feedback:
     dim = 64
     drop = 0.3
     in_channels_class = 128
-    # model = combined_model.combined_model(dim, drop, in_channels_class, spec_size)
-    # model.load_state_dict(torch.load("./feedback/audio_model/checkpoints/model_epoch_13.pt"))
+    model = combined_model.combined_model(dim, drop, in_channels_class, spec_size)
+    model.load_state_dict(torch.load("./feedback/audio_model/checkpoints/model_epoch_13.pt"))
 
     test_feedback = get_feedback_from_file()
 
