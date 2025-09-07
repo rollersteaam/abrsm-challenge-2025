@@ -1,5 +1,6 @@
 import csv
 from dataclasses import dataclass
+from typing import List
 
 from openai import OpenAI
 import torch
@@ -102,7 +103,7 @@ def get_feedback_from_file():
 def train_view(request):
     openai_client = OpenAI()
 
-    done = 0
+    done = 1
     already_done = set()
 
     with open("./feedback/audio_model/chatgpt_abrsm_lmth25.csv") as chatgpt_file:
@@ -151,4 +152,57 @@ def train_view(request):
                 done += 1
 
     return HttpResponse("Done!")
+
+def clean_feedback(feedback: str) -> List[str]:
+    def strip_func(char: str) -> str:
+        return char.replace(
+            "[", ""
+        ).replace(
+            "]", ""
+        ).replace(
+            "'", ""
+        ).replace(
+            "\"", ""
+        ).replace(
+            " ", ""
+        )
+
+    return list(map(strip_func, feedback.split(",")))
+
+@csrf_exempt
+def clean_view(request):
+    with open("./feedback/audio_model/chatgpt_abrsm_lmth25_cleaned.csv", "w") as new_file:
+        with open("./feedback/audio_model/chatgpt_abrsm_lmth25.csv") as file:
+            reader = csv.reader(file, delimiter=",")
+            next(reader, None)
+
+            writer = csv.writer(new_file, delimiter="|")
+            writer.writerow(["performance_id", "piece_1_feedback", "piece_2_feedback"])
+
+            already_done = set()
+
+            for row in reader:
+                performance_id = row[0]
+
+                # De-duplicate results
+                if performance_id in already_done:
+                    continue
+
+                already_done.add(performance_id)
+
+                # Remove extra characters from chatgpts response
+                # print(row[1])
+                # print(row[2])
+                # print(row[1:6])
+                # print()
+                # print(row[6:11])
+                piece_1_feedback = clean_feedback(row[1])
+                piece_2_feedback = clean_feedback(row[2])
+
+                print("Feedback:")
+                print(piece_1_feedback)
+                print(piece_2_feedback)
+
+                writer.writerow([performance_id, piece_1_feedback, piece_2_feedback])
     
+    return HttpResponse("Data cleaned")
