@@ -97,7 +97,7 @@ def get_feedback_from_pieces(piece_1: Piece, piece_2: Piece) -> Feedback:
 
         # word_prediction = np.random.rand(5, 768)
         word_prediction = pred_word.detach().squeeze().numpy()
-        word_prediction = word_prediction + np.random.uniform(-5, 5, size=word_prediction.shape)
+        # word_prediction = word_prediction + np.random.uniform(-5, 5, size=word_prediction.shape)
 
         best_score = np.array([500., 500., 500., 500., 500.])
         best_word = ["test_word", "test_word", "test_word", "test_word", "test_word"]
