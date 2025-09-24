@@ -31,6 +31,7 @@ weights = weights / weights.sum()  # Optional: normalize
 weights = torch.tensor(weights, dtype=torch.float32).to(DEVICE)
 
 lossfn = torch.nn.CrossEntropyLoss()
+cos_sim = nn.CosineEmbeddingLoss()
 #lossfn = nn.CrossEntropyLoss()
 #torch.set_num_threads(80)
 ###############################################################################
@@ -63,6 +64,7 @@ def train(model, train_loader, optimizer, device):
     num_batch = len(train_loader)
     model.train()
     running_loss = 0.0
+    running_cos_loss = 0.0
     skip_count = 0
     for idx, (sample_all, label_all, word_embedding, track_id) in tqdm(enumerate(train_loader), total=num_batch):
         #Set data to device
@@ -85,18 +87,24 @@ def train(model, train_loader, optimizer, device):
         # print(pred_mark[0])
         loss = lossfn(pred_mark, label_all_indices)
 
-        cos_sim = F.cosine_similarity(pred_word, word_embedding, dim=-1)  # [10, 5]
-        loss_cos = 1 - cos_sim.mean()
-        loss += loss_cos
+        pred_word = pred_word.view(-1, 300)
+        word_embedding = word_embedding.view(-1, 300)
+        word_embedding = word_embedding + torch.randn_like(word_embedding) * 0.01  # 0.01 is the noise scale
+        loss_cos = cos_sim(pred_word, word_embedding, torch.ones(pred_word.size(0)).to(device))
+
+
+        loss_total = loss_cos + loss * 0.1
         #Backward Pass
         optimizer.zero_grad()
-        loss.backward()
+        loss_total.backward()
 
         optimizer.step()
 
         #Calculate Running Loss
-        running_loss += (loss).item()
+        running_loss += (loss_total).item()
+        running_cos_loss += loss_cos.item()
     #np.save(f'/Users/acw707/Documents/abrsm_lmth25/mark_dist.npy', mark_distribution.cpu().numpy())
+    print(f'Cosine Loss: {running_cos_loss/(len(train_loader)-skip_count)}')
     return running_loss / (len(train_loader) - skip_count)
 
 def validate(beat_model, val_loader, device):
@@ -104,9 +112,12 @@ def validate(beat_model, val_loader, device):
     beat_model.eval()
     running_loss = 0.0
     running_acc = 0.0
+    running_cos_loss = 0.0
     pred_indices_list = []
     label_indices_list = []
     skip_count = 0
+    word_target_list = []
+    word_pred_list = []
     with torch.no_grad():
       for idx, (sample_all, label_all, word_embedding, track_id) in tqdm(enumerate(val_loader), total=num_batch):
         #Set data to device
@@ -122,25 +133,37 @@ def validate(beat_model, val_loader, device):
         label_all_indices = label_all.argmax(dim=1)
 
         pred_mark, pred_word = model(sample_all)
+        
         # print(sample_all.shape)
         # print(label_all.shape)
         #print(label_all_indices[0])
         #print(pred_mark[0].argmax())
         # print(pred_mark[0])
         loss = lossfn(pred_mark, label_all_indices)
+        
+        pred_word = pred_word.view(-1, 300)
+        word_embedding = word_embedding.view(-1, 300)
+        loss_cos = cos_sim(pred_word, word_embedding, torch.ones(pred_word.size(0)).to(device))
 
-        cos_sim = F.cosine_similarity(pred_word, word_embedding, dim=-1)  # [10, 5]
-        loss_cos = 1 - cos_sim.mean()
-        loss += loss_cos
-
-        running_loss += loss.item()
+        loss_total = loss_cos + loss * 0.1
+        running_loss += loss_total.item()
         pred_indices_list.append(pred_mark.argmax(dim=1).cpu().numpy())
         label_indices_list.append(label_all_indices.cpu().numpy())
         accuracy = one_hot_accuracy(pred_mark, label_all)
         running_acc += accuracy
+        running_cos_loss += loss_cos.item()
+        word_target_list.append(word_embedding.cpu().numpy())
+        word_pred_list.append(pred_word.cpu().numpy())
+    word_target_list = torch.tensor(np.array(word_target_list)).mean(dim=(0,2))
+    word_pred_list = torch.tensor(np.array(word_pred_list)).mean(dim=(0,2))
+    print(word_target_list)
+    print(word_pred_list)
+    # print(pred_word)
+    # print(pred_indices_list)
     print(f'Validation Accuracy: {running_acc/(len(val_loader)-skip_count)}')
-    print(pred_indices_list)
+
     #print(label_indices_list)
+    print(f'Validation Cosine Loss: {running_cos_loss/(len(val_loader)-skip_count)}')
     return running_loss / (len(val_loader)-skip_count), running_acc / (len(val_loader)-skip_count)
 ###############################################################################
 # Training Loop
